@@ -4,10 +4,10 @@ const breakButton = document.querySelector('#break');
 const pomodoroButton = document.querySelector('#pomodoro');
 const resetButton = document.querySelector('#reset');
 let timeMinutes = 25;
-let timeSeconds = 60;
+let timeSeconds = 0;
 let isStarted = false;
-let updateMinutes;
-let updateSeconds; 
+let timerId;
+let mode = "pomodoro";
 
 function makeTimer() {
     const minutes = timeMinutes.toString().padStart(2, '0');
@@ -17,28 +17,20 @@ function makeTimer() {
 
 startButton.addEventListener('click', () => {
     if (isStarted) {
-        clearInterval(updateMinutes);
-        clearInterval(updateSeconds);
-        isStarted = !isStarted;
+        stopTimer();
     } else {
-        updateMinutes = setInterval(() => {
-            timeMinutes--;
-            if (timeMinutes <= 0) {
-                clearInterval(updateMinutes);
-                clearInterval(updateSeconds);
-                
-                timeMinutes = 25;
-                timeSeconds = 0;
-                startButton.textContent = "start";
-            };
-            makeTimer()
-        }, 600);
-        
-        updateSeconds = setInterval(() => {
-            timeSeconds--;
-            if (timeSeconds <= 0) {
+        timerId = setInterval(() => {
+            if (timeSeconds > 0) {
+                timeSeconds -= 1;
+            } else if (timeMinutes > 0) {
+                timeMinutes -= 1;
                 timeSeconds = 59;
+            }
+            
+            if (timeMinutes <= 0) {
+                stopTimer();
             };
+            
             makeTimer()
         }, 10);
         isStarted = !isStarted;  
@@ -48,27 +40,36 @@ startButton.addEventListener('click', () => {
 });
 
 breakButton.addEventListener('click', () => {
-    clearInterval(updateMinutes);
-    clearInterval(updateSeconds);
-    timeMinutes = 5;
-    timeSeconds = 0;
+    mode = "break";
+    typeOfTimer();
+    stopTimer();
     makeTimer();
     pomodoroButton.classList.remove('active');
     breakButton.classList.add('active')
 });
 
 pomodoroButton.addEventListener('click', () => {
-    timeMinutes = 25;
-    timeSeconds = 0;
+    mode = "pomodoro";
+    typeOfTimer();
+    stopTimer();
     makeTimer();
     pomodoroButton.classList.add('active');
     breakButton.classList.remove('active')
 });
 
 resetButton.addEventListener('click', () => {
-    clearInterval(updateMinutes);
-    clearInterval(updateSeconds);
-    if (pomodoroButton) {
+    stopTimer();
+    typeOfTimer();
+});
+
+function stopTimer() {
+    clearInterval(timerId);
+    startButton.textContent = "start";
+    isStarted = false;
+};
+
+function typeOfTimer() {
+    if (mode === "pomodoro") {
         timeMinutes = 25;
         timeSeconds = 0;
         makeTimer();
@@ -76,6 +77,5 @@ resetButton.addEventListener('click', () => {
         timeMinutes = 5;
         timeSeconds = 0;
         makeTimer();
-    }
-})
-
+    };
+}
